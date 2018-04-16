@@ -6,8 +6,9 @@ COMPAT_CFLAGS ?= -D _GNU_SOURCE -I ./compat53 -include compat-5.3.h
 O_CFLAGS      ?= -fPIC -Wall -Wextra -pedantic -std=c99 $(COMPAT_CFLAGS)
 SO_LDFLAGS    ?= -shared
 DEPFILES      != [ -d $(BUILD)/deps ] && find $(BUILD)/deps -name *.d
+LUA           ?= lua
 
-all: $(BUILD)/evdev/core.so
+all: $(BUILD)/evdev/core.so regen-constants
 
 .PHONY: all clean print
 
@@ -25,6 +26,9 @@ $(BUILD)/%.o: %.c
 
 clean:
 	-rm -r $(BUILD)
+
+regen-constants:
+	[ -f /usr/include/linux/input-event-codes.h ] && $(LUA) ./example/gen-constants.lua /usr/include/linux/input-event-codes.h /usr/include/linux/input.h > $(BUILD)/evdev/constants.lua
 
 print:
 	@echo BUILD=$(BUILD)

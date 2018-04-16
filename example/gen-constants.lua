@@ -8,9 +8,15 @@ local capture = {
 	{"Relative Axes", "^REL_"},
 	{"Absolute Axes", "^ABS_"},
 	{"LEDs", "^LED_"},
+	{"Switches", "^SW_"},
+	{"Properties", "^INPUT_PROP_"},
+	{"Misc events", "^MSC_"},
+	{"Sound events", "^SND_"},
 }
 
-local header = [[
+local headerFiles = { ... }
+
+local header = ([[
 
 local _ENV = {}
 
@@ -19,14 +25,16 @@ if setfenv then
 end
 
 -- Constants for the Linux evdev API
--- created by the gen-constants.lua script from the <linux/input.h> header
-]]
+-- created by the gen-constants.lua script from:
+
+--  %s
+]]):format((table.concat(headerFiles or {}, "\n--  ")))
+
+
 
 local footer = [[
 return _ENV
 ]]
-
-local headerFiles = { ... }
 
 if #headerFiles == 0 then
 	print "Please provide header file path(s) as arguments"
@@ -40,7 +48,8 @@ end
 
 for headerIndex = 1, #headerFiles do
 	for line in io.lines(headerFiles[headerIndex]) do
-		local name, value = line:match "^#define%s+(%S+)%s+(%S+)"
+		local name, value = line:match "^#define%s+(%S+)%s+(.+)"
+		value = tostring(value):match("^(.*)%s+/%*") or value
 		if name then
 			for _, record in pairs(capture) do
 				if name:match(record[2]) then
